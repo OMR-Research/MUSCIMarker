@@ -58,13 +58,15 @@ class KeypressBubblingStopperBehavior(object):
     ...     def on_key_up(self):
     ...         pass
     ...
-    >>> w = MyWidgetWithStopper()
-    >>> Window.bind(on_key_down=w.on_key_down)
-    >>> Window.bind(on_key_up=w.on_key_up)
-    >>> # Do something...
-    >>> # Before destroying the widget:
-    >>> Window.unbind(on_key_down=w.on_key_down)
-    >>> Window.unbind(on_key_up=w.on_key_up)
+    >>> def example():
+    ...     w = MyWidgetWithStopper()
+    ...     Window.bind(on_key_down=w.on_key_down)
+    ...     Window.bind(on_key_up=w.on_key_up)
+    ...     # Do something...
+    ...     # Before destroying the widget:
+    ...     Window.unbind(on_key_down=w.on_key_down)
+    ...     Window.unbind(on_key_up=w.on_key_up)
+    ...
 
     The purpose of this mixin is basically to prevent copying these
     two methods over and over.
