@@ -1,32 +1,24 @@
 """This module implements a class that..."""
-from __future__ import print_function, unicode_literals
 from __future__ import division
+from __future__ import print_function, unicode_literals
 
-from builtins import str
-from past.utils import old_div
-from builtins import object
 import codecs
 import logging
-from math import floor, ceil
 import os
+from builtins import object
+from builtins import str
+from math import floor, ceil
 
 import numpy
 import skimage.measure
-from skimage.draw import line
-
 from kivy.core.window import Window
 from kivy.properties import ObjectProperty, StringProperty, BooleanProperty, NumericProperty
-from kivy.uix.behaviors import FocusBehavior
-from kivy.uix.filechooser import FileChooserListView
 from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
-from kivy.uix.textinput import TextInput
-
 from muscima.cropobject import CropObject
-# import mhr.muscima as mm
-
-from kivy.input.recorder import Recorder
+from past.utils import old_div
+from skimage.draw import line
 
 
 __version__ = "0.0.1"

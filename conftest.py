@@ -8,4 +8,7 @@ collect_ignore = ["MUSCIMarker/MUSCIMarkerApp.py",
                   "MUSCIMarker/edge_view.py",
                   "MUSCIMarker/rendering.py",
                   "MUSCIMarker/editor.py",
+                  "MUSCIMarker/help.py",
+                  "MUSCIMarker/object_detection.py",
+                  "MUSCIMarker/utils.py",
                   ]
