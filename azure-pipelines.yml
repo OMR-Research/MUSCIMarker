@@ -54,11 +54,11 @@ jobs:
       packageSpecs: 'python=3.6 numpy scipy matplotlib pytest h5py scikit-image pillow cython coverage'
 
   - script: |
-      pip install --user -r requirements.txt
-      pip install --user -r requirements_windows.txt
+      pip install -r requirements.txt
+      pip install -r requirements_windows.txt
     displayName: 'Install dependencies'
 
-  - script: pip install --user kivy
+  - script: pip install kivy
     displayName: 'Install kivy'
 
   - script: pytest
