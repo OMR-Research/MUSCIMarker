@@ -27,9 +27,6 @@ install:
   # Install additional requirements (Keras and Tensorflow CPU-Version)
   - pip install -r requirements.txt  
   
-  # List installed packages for debuggin purposes
-  - pip list
-  
   # Install Kivy 1.10.1, see https://kivy.org/docs/installation/installation-linux.html#installation-in-a-virtual-environment
   - sudo add-apt-repository ppa:kivy-team/kivy -y
   # Ignore errors from the next command
@@ -38,6 +35,9 @@ install:
   - sudo apt-get install libegl1-mesa-dev libgles2-mesa-dev -y
   - sudo apt-get install python-kivy libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev -y
   - pip install kivy
+
+  # List installed packages for debuggin purposes
+  - pip list
 
 script:
   - pytest --cov=./
