@@ -60,7 +60,14 @@ jobs:
 
   - script: pip install kivy
     displayName: 'Install kivy'
-
+  
+  - script: |
+        conda info
+        python --version
+        pip --version
+        pip list
+    displayName: 'List installed packages'
+    
   - script: pytest
     displayName: 'pytest'
 
