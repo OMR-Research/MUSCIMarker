@@ -1,0 +1,2 @@
+# Monkey Patch
+This config file is required to get Kivy up and running on the CI. It will be monkey-patched into the respective folder on Azure to [fix a known Kivy issue](https://github.com/kivy/kivy/issues/6041).

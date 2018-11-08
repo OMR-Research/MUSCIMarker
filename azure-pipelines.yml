@@ -30,6 +30,9 @@ jobs:
   - script: pip install --user kivy
     displayName: 'Install kivy'
 
+  - script: copy monkey_patch\config.py C:\Miniconda\envs\test-environment\lib\site-packages\kivy\config.py /Y
+    displayName: 'Monkey Patch Kivy'
+
   - script: pytest
     displayName: 'pytest'
 
@@ -51,7 +54,7 @@ jobs:
     inputs:
       createCustomEnvironment: true
       environmentName: test-environment
-      packageSpecs: 'python=3.5 numpy scipy matplotlib pytest h5py scikit-image pillow cython coverage'
+      packageSpecs: 'python=3.6 numpy scipy matplotlib pytest h5py scikit-image pillow cython coverage'
 
   - script: |
       pip install -r requirements.txt
