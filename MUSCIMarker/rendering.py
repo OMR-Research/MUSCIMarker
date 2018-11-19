@@ -28,10 +28,8 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
 from MUSCIMarker.cropobject_view import CropObjectView
-import muscima
-import muscima.stafflines
-from muscima.inference_engine_constants import InferenceEngineConstants
-from muscima.cropobject import cropobjects_merge_bbox, cropobjects_merge_mask, cropobjects_merge_links
+from mung.inference.constants import InferenceEngineConstants as _CONST
+from mung.node import cropobjects_merge_bbox, cropobjects_merge_mask, cropobjects_merge_links
 import MUSCIMarker.tracker as tr
 from MUSCIMarker.utils import keypress_to_dispatch_key
 
@@ -183,7 +181,7 @@ class CropObjectListView(ListView):
             if self.render_new_to_back:
                 ins_index = len(container.children)
             elif self.render_staff_to_back \
-                 and (c.clsname in muscima.STAFF_CROPOBJECT_CLASSES):
+                 and (c.clsname in _CONST.STAFF_CROPOBJECT_CLSNAMES):
                 ins_index = len(container.children)
             else:
                 ins_index = 0
@@ -609,7 +607,7 @@ class CropObjectListView(ListView):
         # names = [c.clsname for c in cropobjects]
         non_staff_cropobjects = [c for c in cropobjects
                                  if c.clsname not in \
-                                 InferenceEngineConstants.STAFF_CROPOBJECT_CLSNAMES]
+                                 _CONST.STAFF_CROPOBJECT_CLSNAMES]
         edges = parser.parse(non_staff_cropobjects)
         #edges = [(cropobjects[i].objid, cropobjects[j].objid)
         #         for i, j in edges_idxs]
@@ -657,8 +655,8 @@ class CropObjectListView(ListView):
 
     def _infer_precedence(self, cropobjects, factor_by_staff=False):
 
-        _relevant_clsnames = set(list(InferenceEngineConstants.NONGRACE_NOTEHEAD_CLSNAMES)
-                                 + list(InferenceEngineConstants.REST_CLSNAMES))
+        _relevant_clsnames = set(list(_CONST.NONGRACE_NOTEHEAD_CLSNAMES)
+                                 + list(_CONST.REST_CLSNAMES))
         prec_cropobjects = [c for c in cropobjects
                             if c.clsname in _relevant_clsnames]
         logging.info('_infer_precedence: {0} total prec. cropobjects'
@@ -668,7 +666,7 @@ class CropObjectListView(ListView):
         # and infer precedence on these subgroups.
         if factor_by_staff:
             staffs = [c for c in cropobjects
-                      if c.clsname == InferenceEngineConstants.STAFF_CLSNAME]
+                      if c.clsname == _CONST.STAFF_CLSNAME]
             logging.info('_infer_precedence: got {0} staffs'.format(len(staffs)))
             staff_objids = {c.objid: i for i, c in enumerate(staffs)}
             prec_cropobjects_per_staff = [[] for _ in staffs]

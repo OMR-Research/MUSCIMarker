@@ -14,7 +14,7 @@ import time
 from kivy.properties import ObjectProperty, StringProperty, NumericProperty
 from kivy.uix.widget import Widget
 
-from muscima.io import parse_cropobject_list, export_cropobject_list
+from mung.io import parse_cropobject_list, export_cropobject_list
 
 __version__ = "0.0.1"
 __author__ = "Jan Hajic jr."

@@ -22,9 +22,9 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
+from kivy.uix.image import Image
 
-from muscima.cropobject import CropObject
-# import mhr.muscima as mm
+from mung.node import Node as MungNode # CropObject
 
 from kivy.input.recorder import Recorder
 
@@ -320,7 +320,19 @@ class InspectionPopup(Popup):
         super(InspectionPopup, self).__init__(*args, **kwargs)
 
         self.data_text = data_text
-        self.image.texture.mag_filter = 'nearest'
+        print('---- self.image: {}'.format(self.image))
+        print('---- self.image.source: {}'.format(self.image.source))
+        # self.image.nocache = True
+        print('Reloading image with source {}...'.format(self.image.source))
+        self.image.reload()
+
+        print('Forcing texture update with source {}...'.format(self.image.source))
+        self.image.texture_update()
+
+        print(' ---- self.image.texture: {}'.format(self.image.texture))
+
+        # # print('self.image.texture.mag_filter: {}'.format(self.image.texture))
+        # self.image.texture.mag_filter = 'nearest'
 
     @property
     def image(self):
@@ -330,15 +342,15 @@ class InspectionPopup(Popup):
 
 
 def bbox_to_integer_bounds(ftop, fleft, fbottom, fright, to_integer=True):
-    """Rounds off the CropObject bounds to the nearest integer
+    """Rounds off the MungNode bounds to the nearest integer
     so that no area is lost (e.g. bottom and right bounds are
     rounded up, top and left bounds are rounded down).
 
     Implementation
     --------------
 
-    Calls the `CropObject` implementation of rounding off the bounding
-    box, to avoid duplicity, as the MUSCIMarker implementation of CropObject
+    Calls the `MungNode` implementation of rounding off the bounding
+    box, to avoid duplicity, as the MUSCIMarker implementation of MungNode
     representation of image annotations is used in the MUSCIMarker model.
 
     :param to_integer: If True, will return the bounds as `int`s. If False,
@@ -346,7 +358,7 @@ def bbox_to_integer_bounds(ftop, fleft, fbottom, fright, to_integer=True):
 
     :returns: top, left, bottom, right (4-tuple).
     """
-    t, l, b, r = CropObject.bbox_to_integer_bounds(ftop, fleft, fbottom, fright)
+    t, l, b, r = MungNode.bbox_to_integer_bounds(ftop, fleft, fbottom, fright)
     if not to_integer:
         t, l, b, r = float(t), float(l), float(b), float(r)
 
@@ -441,20 +453,20 @@ def compute_connected_components(image):
 
 def image_mask_overlaps_cropobject(mask, cropobject,
                                    use_cropobject_mask=False):
-    """Determines whether the given image mask overlaps the given CropObject.
+    """Determines whether the given image mask overlaps the given MungNode.
 
     Can either take into account the cropobject's bounding box only, or can
     also take into account the cropobject's mask, according to the
     ``disregard_cropobject_mask`` flag.
 
     :param mask: A 2D numpy array, assumed to be a mask of the source image
-        in which the CropObject was marked.
+        in which the MungNode was marked.
 
     :param cropobject: The cropobject for which we want to determine its
         mask.
 
     :param use_cropobject_mask: If False, will only check that the
-        mask overlaps the CropObject's bounding box, not necessarily
+        mask overlaps the MungNode's bounding box, not necessarily
         its mask.
 
     :return: True or False

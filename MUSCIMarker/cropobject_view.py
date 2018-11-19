@@ -16,7 +16,7 @@ from kivy.uix.label import Label
 from kivy.uix.listview import SelectableView, CompositeListItem
 from kivy.uix.spinner import Spinner
 from kivy.uix.togglebutton import ToggleButton
-from muscima.cropobject import split_cropobject_on_connected_components
+from mung.node import split_cropobject_on_connected_components
 from past.utils import old_div
 
 import MUSCIMarker.tracker as tr
@@ -32,7 +32,7 @@ __author__ = "Jan Hajic jr."
 # * Colors defined at initialization time,
 # * Text is empty
 class CropObjectView(SelectableView, ToggleButton):
-    """The view to an individual CropObject. Implements interface for CropObject
+    """The view to an individual MungNode. Implements interface for MungNode
     manipulation.
 
     Selection
@@ -44,7 +44,7 @@ class CropObjectView(SelectableView, ToggleButton):
     Mouse interaction
     -----------------
 
-    Once selected, the CropObject can be dragged around [NOT IMPLEMENTED].
+    Once selected, the MungNode can be dragged around [NOT IMPLEMENTED].
 
     Keyboard shortcuts
     ------------------
@@ -53,12 +53,12 @@ class CropObjectView(SelectableView, ToggleButton):
 
     The available keyboard shortcuts are:
 
-    * Backspace: Remove the CropObject
+    * Backspace: Remove the MungNode
     * Escape: Unselect
-    * Arrow keys: move the CropObject by 1 editor-scale pixel.
-    * Arrow keys + alt: move the CropObject by 1 display pixel. (Finest.)
-    * Arrow keys + shift: stretch the CropObject by 1 editor-scale pixel.
-    * Arrow keys + alt + shift: stretch the CropObject by 1 display pixel. (Finest.)
+    * Arrow keys: move the MungNode by 1 editor-scale pixel.
+    * Arrow keys + alt: move the MungNode by 1 display pixel. (Finest.)
+    * Arrow keys + shift: stretch the MungNode by 1 editor-scale pixel.
+    * Arrow keys + alt + shift: stretch the MungNode by 1 display pixel. (Finest.)
     * i: toggle info label
     * c: change class selection
 
@@ -81,7 +81,7 @@ class CropObjectView(SelectableView, ToggleButton):
 
     def __init__(self, selectable_cropobject, rgb, alpha=0.25, **kwargs):
         """
-        :param selectable_cropobject: The intermediate-level CropObject represnetation,
+        :param selectable_cropobject: The intermediate-level MungNode represnetation,
             with recomputed dimension.
         :param rgb:
         :param alpha: Works for deselected color, when selected, multiplied by 1.5
@@ -186,7 +186,7 @@ class CropObjectView(SelectableView, ToggleButton):
     # Keyboard event processing: the core UI of the CropObjectView
     def on_key_down(self, window, key, scancode, codepoint, modifier):
         """This method is one of the primary User Interfaces: keyboard
-        shortcuts to manipulate a selected CropObject.
+        shortcuts to manipulate a selected MungNode.
 
         :param window:
         :param key:
@@ -316,7 +316,7 @@ class CropObjectView(SelectableView, ToggleButton):
             logging.info('CropObjectView: handling hiding relationships')
             self.toggle_hide_relationships()
 
-        # Inspect CropObjects
+        # Inspect MungNodes
         elif dispatch_key == '105':  # i
             logging.info('CropObjectView: handling inspection')
             #self.toggle_info_panel()
@@ -334,7 +334,7 @@ class CropObjectView(SelectableView, ToggleButton):
         # However, maybe we want to do the operation with other selected objects
         # as well.
         # On the other hand: this makes things propagate past the CropObjectViews,
-        # so for example Escape unselects all CropObjects *and* quits the application.
+        # so for example Escape unselects all MungNodes *and* quits the application.
         # Therefore, the CropObjectListView should "block" these signals
         # from propagating further.
         # Current policy: if any CropObjectView captures a key signal, it will propagate
@@ -559,24 +559,24 @@ class CropObjectView(SelectableView, ToggleButton):
                 fn_name='CropObjectView.move',
                 tracker_name='editing')
     def move(self, vertical=0, horizontal=0):
-        """Move the underlying CropObject.
+        """Move the underlying MungNode.
 
-        NOTE: How to deal with CropObjects that have a mask? Roll it?
+        NOTE: How to deal with MungNodes that have a mask? Roll it?
 
         In the current implementation, there is no listener inside the model
-        for individual CropObjects, so there is no propagation of the change
+        for individual MungNodes, so there is no propagation of the change
         to the view. We currently work around this by simply moving the view
-        as well, but this will not work when the underlying CropObject is moved
+        as well, but this will not work when the underlying MungNode is moved
         by some other means.
         """
         logging.info('CropObjectView {0}: moving vertical={1}, horizontal={2}'
                      ''.format(self.cropobject.objid, vertical, horizontal))
         c = self._model_counterpart
-        # The CropObjects in the model are kept in the Numpy world.
+        # The MungNodes in the model are kept in the Numpy world.
         c.x += vertical #* self._height_scaling_factor
         c.y += horizontal #* self._height_scaling_factor
         if c.mask is not None:
-            logging.warn('CropObjectView {0}: Moving a CropObject invalidates its mask!')
+            logging.warn('CropObjectView {0}: Moving a MungNode invalidates its mask!')
         self._model.add_cropobject(c)
 
         self.move_view(vertical=vertical, horizontal=horizontal)
@@ -588,18 +588,18 @@ class CropObjectView(SelectableView, ToggleButton):
                     self.pos[1] + vertical * self._width_scaling_factor)
 
     def move_fine(self, vertical=0, horizontal=0):
-        """Move the underlying CropObject.
+        """Move the underlying MungNode.
 
         In the current implementation, there is no listener inside the model
-        for individual CropObjects, so there is no propagation of the change
+        for individual MungNodes, so there is no propagation of the change
         to the view. We currently work around this by simply moving the view
-        as well, but this will not work when the underlying CropObject is moved
+        as well, but this will not work when the underlying MungNode is moved
         by some other means.
         """
         logging.info('CropObjectView {0}: moving vertical={1}, horizontal={2}'
                      ''.format(self.cropobject.objid, vertical, horizontal))
         c = self._model_counterpart
-        # The CropObjects in the model are kept in the Numpy world.
+        # The MungNodes in the model are kept in the Numpy world.
         c.x += vertical * self._height_scaling_factor / self._editor_scale
         c.y += horizontal * self._height_scaling_factor / self._editor_scale
         self._model.add_cropobject(c)
@@ -618,8 +618,8 @@ class CropObjectView(SelectableView, ToggleButton):
                 fn_name='CropObjectView.stretch',
                 tracker_name='editing')
     def stretch(self, vertical=0, horizontal=0):
-        """Stretch the underlying CropObject. Does NOT change its position.
-        Cannot make the CropObject smaller than 1 in either dimension.
+        """Stretch the underlying MungNode. Does NOT change its position.
+        Cannot make the MungNode smaller than 1 in either dimension.
 
         See :meth:`move` for a discussion on linking the model action and view."""
         logging.info('CropObjectView {0}: stretching vertical={1}, horizontal={2}'
@@ -642,8 +642,8 @@ class CropObjectView(SelectableView, ToggleButton):
             self.height += vertical * self._height_scaling_factor
 
     def stretch_fine(self, vertical=0, horizontal=0):
-        """Stretch the underlying CropObject. Does NOT change its position.
-        Cannot make the CropObject smaller than 1 in either dimension.
+        """Stretch the underlying MungNode. Does NOT change its position.
+        Cannot make the MungNode smaller than 1 in either dimension.
 
         See :meth:`move` for a discussion on linking the model action and view."""
         logging.info('CropObjectView {0}: stretching vertical={1}, horizontal={2}'
@@ -673,7 +673,7 @@ class CropObjectView(SelectableView, ToggleButton):
                 fn_name='CropObjectView.split',
                 tracker_name='editing')
     def split(self):
-        """Split the CropObject according to its mask.
+        """Split the MungNode according to its mask.
         """
         _next_objid = self._model.get_next_cropobject_id()
         new_cropobjects = split_cropobject_on_connected_components(self._model_counterpart,

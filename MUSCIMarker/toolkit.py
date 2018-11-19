@@ -16,8 +16,8 @@ from kivy.core.window import Window
 from kivy.properties import ObjectProperty, BooleanProperty, ListProperty, NumericProperty
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from muscima.cropobject import split_cropobject_on_connected_components
-from muscima.inference_engine_constants import InferenceEngineConstants as _CONST
+from mung.node import split_cropobject_on_connected_components
+from mung.inference.constants import InferenceEngineConstants as _CONST
 from past.utils import old_div
 from skimage.draw import polygon, line
 from skimage.filters import threshold_otsu
@@ -35,7 +35,7 @@ class MUSCIMarkerTool(Widget):
     """A MUSCIMarkerTool defines a set of available actions.
     For instance the viewing tool enables the user to freely scale and move
     the image around; the selection tool provides a click & drag bounding box drawing
-    interface to create new CropObjects, etc.
+    interface to create new MungNodes, etc.
 
     The tools define a set of Widgets that get added to the editor Layout, and a set
     of shortcuts that are made available through the Command Palette.
@@ -44,7 +44,7 @@ class MUSCIMarkerTool(Widget):
 
     During initialization, the new tool retains a reference to the MUSCIMarkerApp
     that created it. This way, it can translate user actions into model operations:
-    e.g. the ManualSelectTool can call an "add CropObject" controller method.
+    e.g. the ManualSelectTool can call an "add MungNode" controller method.
     """
 
     def __init__(self, app, editor_widget, command_widget, **kwargs):
@@ -202,7 +202,7 @@ class AddSymbolTool(MUSCIMarkerTool):
         return command_widgets
 
     def on_current_cropobject_selection(self, instance, pos):
-        # Ask the app to build CropObject from the bbox.
+        # Ask the app to build MungNode from the bbox.
         logging.info('ManualSelectTool: fired on_current_cropobject_selection with pos={0}'
                      ''.format(pos))
         self.app_ref.add_cropobject_from_selection(
@@ -214,7 +214,7 @@ class AddSymbolTool(MUSCIMarkerTool):
         self.editor_widgets['bbox_tracer'].clear()
 
     def on_current_cropobject_model_selection(self, instance, pos):
-        # Ask the app to build CropObject from the bbox.
+        # Ask the app to build MungNode from the bbox.
         logging.info('AddSymbolTool: fired on_current_cropobject_model_selection with pos={0}'
                      ''.format(pos))
         self.app_ref.add_cropobject_from_model_selection(
@@ -446,14 +446,14 @@ class LassoBoundingBoxSelectTool(MUSCIMarkerTool):
 
     The Lasso selection tool allows to specify in freehand a region that should
     be assigned a label. All lasso tools assign a mask as well as a bounding
-    box to the CropObject.
+    box to the MungNode.
 
     Bounding box: editor vs. model
     -------------------------------
 
     There is an issue with repeated scaling because of rounding errors.
     Generally, once the model-world bbox is computed, it should propagate
-    all the way to actually adding the CropObject.
+    all the way to actually adding the MungNode.
 
     """
     current_cropobject_selection = ObjectProperty(None)
@@ -544,7 +544,7 @@ class LassoBoundingBoxSelectTool(MUSCIMarkerTool):
         coordinates may turn out to be non-integers. We need to mimic
         the model-world procedure for converting these to integers,
         to ensure that the mask's shape will exactly mimic the shape
-        of the CropObject's integer bounding box.
+        of the MungNode's integer bounding box.
         """
         wT, wL, wB, wR = selection['top'], selection['left'], selection['bottom'], selection['right']
         mT, mL, mB, mR = self.app_ref.image_scaler.bbox_widget2model(wT, wL, wB, wR)
@@ -590,7 +590,7 @@ class LassoBoundingBoxSelectTool(MUSCIMarkerTool):
 
     # Used (bound when constructing editor widgets)
     def current_selection_and_mask_from_points(self, instance, pos):
-        """Triggers adding a CropObject with both bbox and mask."""
+        """Triggers adding a MungNode with both bbox and mask."""
         if pos is None:
             logging.info('LassoBoundingBoxSelect: No points, clearing & skipping.')
             self.editor_widgets['line_tracer'].clear()
@@ -621,7 +621,7 @@ class LassoBoundingBoxSelectTool(MUSCIMarkerTool):
                 self.current_cropobject_model_selection = model_selection
 
     def on_current_cropobject_selection(self, instance, pos):
-        # Ask the app to build CropObject from the bbox.
+        # Ask the app to build MungNode from the bbox.
         logging.info('LassoBoundingBoxSelect: fired on_current_cropobject_selection with pos={0}'
                      ''.format(pos))
         self.app_ref.add_cropobject_from_selection(self.current_cropobject_selection,
@@ -632,7 +632,7 @@ class LassoBoundingBoxSelectTool(MUSCIMarkerTool):
         self.editor_widgets['line_tracer'].clear()
 
     def on_current_cropobject_model_selection(self, instance, pos):
-        # Ask the app to build CropObject from the bbox.
+        # Ask the app to build MungNode from the bbox.
         logging.info('LassoBoundingBoxSelect: fired on_current_cropobject_model_selection with pos={0}'
                      ''.format(pos))
         self.app_ref.add_cropobject_from_model_selection(
@@ -788,7 +788,7 @@ class MaskEraserTool(LassoBoundingBoxSelectTool):
         self.do_split = do_split
 
     def on_current_cropobject_model_selection(self, instance, pos):
-        """Here, instead of adding a new CropObject as the other lasso
+        """Here, instead of adding a new MungNode as the other lasso
         tools do, modify selected cropobjects' masks."""
         t, l, b, r = pos['top'], pos['left'], pos['bottom'], pos['right']
         bbox = bbox_to_integer_bounds(t, l, b, r)
@@ -840,7 +840,7 @@ class MaskEraserTool(LassoBoundingBoxSelectTool):
                 output_cropobjects = [c]
 
             for c in output_cropobjects:
-                # Now add the CropObject back to redraw. Note that this way,
+                # Now add the MungNode back to redraw. Note that this way,
                 # the object's objid stays the same, which is essential for
                 # maintaining intact inlinks and outlinks!
                 logging.info('MaskEraser: New object data dict: {0}'
@@ -851,7 +851,7 @@ class MaskEraserTool(LassoBoundingBoxSelectTool):
                     new_view = self.app_ref.cropobject_list_renderer.view.get_cropobject_view(c.objid)
                     new_view.ensure_selected()
                 except KeyError:
-                    logging.info('MaskEraser: View for modified CropObject {0} has'
+                    logging.info('MaskEraser: View for modified MungNode {0} has'
                                  ' not been rendered yet, cannot select it.'
                                  ''.format(c.objid))
 
@@ -865,8 +865,8 @@ class MaskEraserTool(LassoBoundingBoxSelectTool):
 class MaskAdditionTool(LassoBoundingBoxSelectTool):
 
     def on_current_cropobject_model_selection(self, instance, pos):
-        """Here, instead of adding a new CropObject like the other
-        Lasso tools, we instead modify the mask of selected CropObjects
+        """Here, instead of adding a new MungNode like the other
+        Lasso tools, we instead modify the mask of selected MungNodes
         by adding the lasso-ed area."""
         c_lasso = self.app_ref.generate_cropobject_from_model_selection(
             selection=pos,
@@ -889,7 +889,7 @@ class MaskAdditionTool(LassoBoundingBoxSelectTool):
                 new_view = self.app_ref.cropobject_list_renderer.view.get_cropobject_view(c.objid)
                 new_view.ensure_selected()
             except KeyError:
-                logging.info('MaskEraser: View for modified CropObject {0} has'
+                logging.info('MaskEraser: View for modified MungNode {0} has'
                              ' not been rendered yet, cannot select it.'
                              ''.format(c.objid))
 
@@ -1055,7 +1055,7 @@ class BaseListItemViewsOperationTool(MUSCIMarkerTool):
     ``self.list_view.container.children[:]`` is not correct.
 
     Override the ``apply_operation`` method to get tools that actually do
-    something to the CropObjectViews that correspond to CropObjects
+    something to the MungNodeViews that correspond to MungNodes
     overlapping the lasso-ed area."""
     use_mask_to_determine_selection = BooleanProperty(False)
 
@@ -1223,12 +1223,12 @@ class BaseListItemViewsOperationTool(MUSCIMarkerTool):
 
     def apply_operation(self, item_view):
         """Override this method in child Tools to make this actually
-        do something to the overlapping CropObjectViews."""
+        do something to the overlapping MungNodeViews."""
         pass
 
 
 class CropObjectViewsSelectTool(BaseListItemViewsOperationTool):
-    """Select the activated CropObjectViews."""
+    """Select the activated MungNodeViews."""
 
     def __init__(self, ignore_staff=False, **kwargs):
         super(CropObjectViewsSelectTool, self).__init__(**kwargs)
@@ -1258,7 +1258,7 @@ class CropObjectViewsSelectTool(BaseListItemViewsOperationTool):
 
         _t_middle = time.clock()
 
-        # Find all CropObjects that overlap
+        # Find all MungNodes that overlap
         objids = [objid for objid, c in self._model.cropobjects.items()
                   if image_mask_overlaps_cropobject(model_mask, c,
                                                     use_cropobject_mask=self.use_mask_to_determine_selection)]
@@ -1313,7 +1313,7 @@ class CropObjectViewsSelectTool(BaseListItemViewsOperationTool):
 
 
 class EdgeViewsSelectTool(BaseListItemViewsOperationTool):
-    """Selects all edges that lead to/from CropObjects overlapped
+    """Selects all edges that lead to/from MungNodes overlapped
     by the selection."""
     line_color = ListProperty([1.0, 0.0, 0.0])
 
@@ -1343,7 +1343,7 @@ class EdgeViewsSelectTool(BaseListItemViewsOperationTool):
                                               c_end.middle):
                 objid_pairs.append((e.start_objid, e.end_objid))
 
-        # Find all CropObjects that overlap
+        # Find all MungNodes that overlap
         # objids = [objid for objid, c in self._model.cropobjects.iteritems()
         #           if image_mask_overlaps_cropobject(model_mask, c,
         #             use_cropobject_mask=self.use_mask_to_determine_selection)]
@@ -1473,7 +1473,7 @@ class BackgroundLassoTool(LassoBoundingBoxSelectTool):
     """Set the selected area as image background."""
 
     def on_current_cropobject_model_selection(self, instance, pos):
-        # Ask the app to build CropObject from the bbox.
+        # Ask the app to build MungNode from the bbox.
         logging.info('BackgroundLassoTool: fired on_current_cropobject_model_selection with pos={0}'
                      ''.format(pos))
 
@@ -1511,7 +1511,7 @@ class BackgroundFillTool(LassoBoundingBoxSelectTool):
     the given pixel by at least 8 intensity points. [NOT IMPLEMENTED]"""
 
     def on_current_cropobject_model_selection(self, instance, pos):
-        # Ask the app to build CropObject from the bbox.
+        # Ask the app to build MungNode from the bbox.
         logging.info('BackgroundFillTool: fired on_current_cropobject_model_selection with pos={0}'
                      ''.format(pos))
 
@@ -1547,7 +1547,7 @@ class BackgroundFillTool(LassoBoundingBoxSelectTool):
 # Interface for detection! Highly experimental.
 
 class SymbolDetectionTool(MUSCIMarkerTool):
-    """Runs the detector for the currently selected CropObject class
+    """Runs the detector for the currently selected MungNode class
     on a selected region.
 
     Requires having a detection server running on a configured host/port.

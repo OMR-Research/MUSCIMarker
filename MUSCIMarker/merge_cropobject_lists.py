@@ -7,8 +7,8 @@ import codecs
 import logging
 import time
 
-from muscima.cropobject import merge_cropobject_lists
-from muscima.io import  parse_cropobject_list, export_cropobject_list
+from mung.node import merge_cropobject_lists
+from mung.io import  parse_cropobject_list, export_cropobject_list
 
 __version__ = "0.0.1"
 __author__ = "Jan Hajic jr."

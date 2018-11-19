@@ -6,9 +6,9 @@ import collections
 import logging
 
 import numpy
-from muscima.cropobject import cropobject_distance
-from muscima.graph import find_beams_incoherent_with_stems
-from muscima.inference_engine_constants import _CONST
+from mung.node import cropobject_distance
+from mung.graph import find_beams_incoherent_with_stems
+from mung.inference.constants import _CONST
 from sklearn.feature_extraction import DictVectorizer
 
 __version__ = "0.0.1"
@@ -65,7 +65,7 @@ class SimpleDeterministicDependencyParser(object):
 
 class PairwiseClassificationParser(object):
     """This parser applies a simple classifier that takes the bounding
-    boxes of two CropObjects and their classes and returns whether there
+    boxes of two MungNodes and their classes and returns whether there
     is an edge or not."""
     MAXIMUM_DISTANCE_THRESHOLD = 200
 
@@ -217,14 +217,14 @@ class PairwiseClfFeatureExtractor(object):
         self.vectorizer = vectorizer
 
     def __call__(self, *args, **kwargs):
-        """The call is per item (in this case, CropObject pair)."""
+        """The call is per item (in this case, MungNode pair)."""
         fd = self.get_features_relative_bbox_and_clsname(*args, **kwargs)
         # Compensate for the vecotrizer "target", which we don't have here (by :-1)
         item_features = self.vectorizer.transform(fd).toarray()[0, :-1]
         return item_features
 
     def get_features_relative_bbox_and_clsname(self, c_from, c_to):
-        """Extract a feature vector from the given pair of CropObjects.
+        """Extract a feature vector from the given pair of MungNodes.
         Does *NOT* convert the class names to integers.
 
         Features: bbox(c_to) - bbox(c_from), clsname(c_from), clsname(c_to)
@@ -259,7 +259,7 @@ class PairwiseClfFeatureExtractor(object):
         return feature_dict
 
     def get_features_distance_relative_bbox_and_clsname(self, c_from, c_to):
-        """Extract a feature vector from the given pair of CropObjects.
+        """Extract a feature vector from the given pair of MungNodes.
         Does *NOT* convert the class names to integers.
 
         Features: bbox(c_to) - bbox(c_from), clsname(c_from), clsname(c_to)

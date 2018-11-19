@@ -19,11 +19,11 @@ from kivy.app import App
 from kivy.properties import ObjectProperty, DictProperty, NumericProperty, ListProperty, StringProperty
 from kivy.uix.widget import Widget
 
-from muscima.io import export_cropobject_list
-import muscima.stafflines
-from muscima.inference import PitchInferenceEngine, OnsetsInferenceEngine, MIDIBuilder, play_midi
-from muscima.inference_engine_constants import InferenceEngineConstants as _CONST
-from muscima.graph import \
+from mung.io import export_cropobject_list
+import mung.stafflines
+from mung.inference.inference import PitchInferenceEngine, OnsetsInferenceEngine, MIDIBuilder, play_midi
+from mung.inference.constants import InferenceEngineConstants as _CONST
+from mung.graph import \
     find_beams_incoherent_with_stems, \
     find_misdirected_ledger_line_edges, \
     find_related_staffs
@@ -41,17 +41,17 @@ __author__ = "Jan Hajic jr."
 
 
 class ObjectGraph(Widget):
-    """This class describes how the CropObjects from
+    """This class describes how the MungNodes from
     a CropObjectAnnotatorModel are attached to each other,
     forming an oriented graph.
 
-    The Graph model never actually interacts with the CropObjects
+    The Graph model never actually interacts with the MungNodes
     that form its nodes. It is only aware of their ``objid``s.
-    The interaction with CropObjects is only necessary during rendering.
+    The interaction with MungNodes is only necessary during rendering.
     """
 
     # cropobject_model = ObjectProperty()
-    # '''Reference to the CropObjcetAnnotatorModel holding CropObject
+    # '''Reference to the CropObjcetAnnotatorModel holding MungNode
     # information.'''
     vertices = DictProperty()
     '''List of valid vertex indices.'''
@@ -66,12 +66,12 @@ class ObjectGraph(Widget):
     '''
 
     _outlinks = DictProperty()
-    '''Automatically computed dict of all CropObjects attached to a given
-    CropObject. Internal.'''
+    '''Automatically computed dict of all MungNodes attached to a given
+    MungNode. Internal.'''
 
     _inlinks = DictProperty()
-    '''Automatically computed dict of all CropObjects that the given
-    CropObject is attached to. Internal.'''
+    '''Automatically computed dict of all MungNodes that the given
+    MungNode is attached to. Internal.'''
 
     # def __init__(self, model, **kwargs):
     #     super(ObjectGraph, self).__init__(**kwargs)
@@ -95,7 +95,7 @@ class ObjectGraph(Widget):
 
     def add_edge(self, edge, label='Attachment'):
         """Edge is an ``(a1, a2)`` pair such that ``a1`` is the head
-        and ``a2`` is the child CropObject. Our (attachment) dependency edges
+        and ``a2`` is the child MungNode. Our (attachment) dependency edges
         lead from the root down, at least in the model."""
         logging.info('Graph: adding edge {0} with label {1}'.format(edge, label))
         a1 = edge[0]
@@ -193,7 +193,7 @@ class ObjectGraph(Widget):
         del self.edges[a1, a2]
 
     def remove_obj_from_graph(self, objid):
-        """Clears out the given CropObject from the attachments
+        """Clears out the given MungNode from the attachments
         graph.
 
         DO NOT USE THIS if you only want to clear out the object's
@@ -325,16 +325,16 @@ class ObjectGraph(Widget):
 class CropObjectAnnotatorModel(Widget):
     """This model describes the conceptual interface of the annotation
     app: there is an annotator performing some actions, and this model
-    has support for these actions. It operates with finished CropObjects
+    has support for these actions. It operates with finished MungNodes
     and MLClasses.
 
     The annotator is working with three sets of objects:
 
     * The image that is being annotated,
-    * the CropObjects that have already been marked,
+    * the MungNodes that have already been marked,
     * the set of object types that can be marked.
 
-    The object graph is synced to the CropObject dict in the Model
+    The object graph is synced to the MungNode dict in the Model
     on export.
 
     """
@@ -402,13 +402,13 @@ class CropObjectAnnotatorModel(Widget):
         if smart_parsing:
 
             vectorizer_file = config.get('parsing', 'smart_parsing_vectorizer')
-            with open(vectorizer_file) as hdl:
-                vectorizer = pickle.load(hdl)
+            with open(vectorizer_file, 'rb') as hdl:
+                vectorizer = pickle.load(hdl, encoding='latin2')
             feature_extractor = PairwiseClfFeatureExtractor(vectorizer=vectorizer)
 
             model_file = config.get('parsing', 'smart_parsing_model')
-            with open(model_file) as hdl:
-                classifier = pickle.load(hdl)
+            with open(model_file, 'rb') as hdl:
+                classifier = pickle.load(hdl, encoding='latin2')
 
             self.parser = PairwiseClassificationParser(grammar=grammar,
                                                        clf=classifier,
@@ -486,7 +486,7 @@ class CropObjectAnnotatorModel(Widget):
     def _is_cropobject_valid(self, cropobject):
         t, l, b, r = cropobject.bounding_box
         if (b - t) * (r - l) < 10:
-            logging.warn('Model: Trying to add a CropObject that is very small'
+            logging.warn('Model: Trying to add a MungNode that is very small'
                          ' ({0} x {1})'.format(cropobject.height, cropobject.width))
             return False
         return True
@@ -530,7 +530,7 @@ class CropObjectAnnotatorModel(Widget):
              fn_name='model.export_cropobjects',
              tracker_name='model')
     def export_cropobjects(self, output, **kwargs):
-        logging.info('Model: Exporting CropObjects to {0}'.format(output))
+        logging.info('Model: Exporting MungNodes to {0}'.format(output))
         with codecs.open(output, 'w', 'utf-8') as hdl:
             hdl.write(self.export_cropobjects_string(**kwargs))
             hdl.write('\n')
@@ -564,7 +564,7 @@ class CropObjectAnnotatorModel(Widget):
         """Overwrites previous mlclasses definition -- there can only be
         one active at the same time.
 
-        Note that this may invalidate all of the CropObjects in memory.
+        Note that this may invalidate all of the MungNodes in memory.
 
         Note that this also invalidates the current grammar.
         """
@@ -580,29 +580,29 @@ class CropObjectAnnotatorModel(Widget):
     # Synchronizing with the graph.
     def sync_graph_to_cropobjects(self, cropobjects=None):
         """Ensures that the attachments are accurately reflected
-        among the CropObjects. The attachments are build separately
-        in the app, so they need to be written to the CropObjects
+        among the MungNodes. The attachments are build separately
+        in the app, so they need to be written to the MungNodes
         explicitly.
 
         Edge label handling
         -------------------
 
         Edges labeled as ``Attachment`` in the graph get synced to
-        the CropObject's inlinks and outlinks.
+        the MungNode's inlinks and outlinks.
 
         Edges labeled as ``Precedence`` in the graph get synced
-        to the CropObject's data, under the keys ``precedence_inlinks``
+        to the MungNode's data, under the keys ``precedence_inlinks``
         and ``precedence_outlinks``, as lists of ints.
 
         .. warning::
 
-            Clears all outlinks and inlinks from the CropObjects and replaces
+            Clears all outlinks and inlinks from the MungNodes and replaces
             them with the graph's structure!
 
-        :param cropobjects: A list of CropObjects which should be synced.
+        :param cropobjects: A list of MungNodes which should be synced.
             If left to ``None``, will sync everything.
         """
-        logging.debug('Model: Syncing {0} attachments to CropObjects.'
+        logging.debug('Model: Syncing {0} attachments to MungNodes.'
                        ''.format(len(self.graph.edges)))
 
         if cropobjects is None:
@@ -635,18 +635,18 @@ class CropObjectAnnotatorModel(Widget):
                     del c.data['precedence_outlinks']
 
     def sync_cropobjects_to_graph(self, cropobjects=None):
-        """Ensures that the attachment structure in CropObjects
+        """Ensures that the attachment structure in MungNodes
         is accurately reflected in the attachments data structure
         of the model. (Typically, you want to call this on importing
-        a new set of CropObjects, to make sure their inlinks and outlinks
+        a new set of MungNodes, to make sure their inlinks and outlinks
         are correctly represented in the attachment structures.
 
         .. warning::
 
             Clears the current graph and replaces it with the edges inferred
-            from CropObjects!
+            from MungNodes!
 
-        :param cropobjects: A list of CropObjects which should be synced.
+        :param cropobjects: A list of MungNodes which should be synced.
             If left to ``None``, will sync everything.
         """
         if cropobjects is None:
@@ -683,7 +683,7 @@ class CropObjectAnnotatorModel(Widget):
         self.sync_graph_to_cropobjects()
 
     def ensure_cropobjects_consistent(self, cropobjects=None):
-        """Makes sure that the CropObjects are all well-formed.
+        """Makes sure that the MungNodes are all well-formed.
         Checks for:
 
         * Match between objid and uid
@@ -696,7 +696,7 @@ class CropObjectAnnotatorModel(Widget):
         for c in cropobjects:
             dataset, doc, num = c._parse_uid(c.uid)
             if c.objid != num:
-                logging.warn('CropObject consistency check: object with objid {0}'
+                logging.warn('MungNode consistency check: object with objid {0}'
                              ' has UID {1}, setting UID to match objid.'
                              ''.format(c.objid, c.uid))
                 c.set_objid(c.objid)
@@ -718,7 +718,7 @@ class CropObjectAnnotatorModel(Widget):
         """Make sure that the given edge is not in the model.
         If it was there, it gets removed; otherwise, no action is taken.
         As opposed to this operation on the graph, on the model, the
-        CropObjects in question have their inlink/outlink arrays
+        MungNodes in question have their inlink/outlink arrays
         updated as well.
         """
         self.graph.ensure_remove_edge(from_objid, to_objid)
@@ -747,7 +747,7 @@ class CropObjectAnnotatorModel(Widget):
     ##########################################################################
     # Integrity
     def validate_cropobjects(self):
-        """Check that all current CropObject correspond to a class."""
+        """Check that all current MungNode correspond to a class."""
         if len(self.mlclasses) == 0:
             raise ValueError('Cannot validate cropobjects without mlclasses.')
         if self.image is None:
@@ -780,7 +780,7 @@ class CropObjectAnnotatorModel(Widget):
         return v, i, o, r_v, r_i, r_o
 
     def find_very_small_objects(self, bbox_threshold=10, mask_threshold=10):
-        """Finds CropObjects that are very small.
+        """Finds MungNodes that are very small.
 
         "Very small" means that their bounding box area is
         smaller than the given threshold or they consist of less
@@ -847,7 +847,7 @@ class CropObjectAnnotatorModel(Widget):
         in question. Ignores whether these staffs are already within
         the list of ``cropobjects`` passed to the function.
 
-        Wraps the ``muscima.graph.find_related_staffs()`` function.
+        Wraps the ``mung.graph.find_related_staffs()`` function.
 
         :param with_stafflines: If set, will also return all stafflines
             and staffspaces related to the discovered staffs.
@@ -989,20 +989,20 @@ class CropObjectAnnotatorModel(Widget):
     def process_detection_result(self, instance, pos):
         """Incorporates the detection result into the model.
 
-        The detection result arrives as a list of CropObjects.
+        The detection result arrives as a list of MungNodes.
         The model has to make sure their ``objid`` and potentially
         ``doc`` attributes are valid. Docname is handled on export,
         so it is not a problem here, but the objids of detection
         results start at 0, so they must be corrected.
 
-        Then, the model needs to shift the CropObjects bottom and right
+        Then, the model needs to shift the MungNodes bottom and right
         according to the bounding box of the detection input region.
 
-        After ensuring the CropObjects can be added to the model
+        After ensuring the MungNodes can be added to the model
         without introducing conflicts,
         """
         result_cropobjects = pos
-        logging.info('Got a total of {0} detected CropObjects.'
+        logging.info('Got a total of {0} detected MungNodes.'
                      ''.format(len(result_cropobjects)))
 
         processed_cropobjects = self._detection_filter_tiny(result_cropobjects)
@@ -1019,7 +1019,7 @@ class CropObjectAnnotatorModel(Widget):
             self.add_cropobject(c)
 
     def _detection_apply_margin(self, cropobjects, margin, bounding_box):
-        """Checks if the CropObject aren't within the given margin. Note that this
+        """Checks if the MungNode aren't within the given margin. Note that this
         is applied *after* translation back to coordinates w.r.t. image, not w.r.t.
         detection crop; the bounding box is therefore also w.r.t. image.
 
@@ -1135,36 +1135,36 @@ class CropObjectAnnotatorModel(Widget):
             # return
 
         try:
-            new_cropobjects = muscima.stafflines.merge_staffline_segments(list(self.cropobjects.values()))
+            new_cropobjects = mung.stafflines.merge_staffline_segments(list(self.cropobjects.values()))
         except ValueError as e:
-            logging.warn('Model: Staffline merge failed:\n\t\t'
-                         '{0}'.format(e.message))
+            logging.warning('Model: Staffline merge failed:\n\t\t'
+                            '{0}'.format(e))
             return
 
         try:
             if build_staffs:
-                staffs = muscima.stafflines.build_staff_cropobjects(new_cropobjects)
+                staffs = mung.stafflines.build_staff_cropobjects(new_cropobjects)
                 new_cropobjects = new_cropobjects + staffs
         except Exception as e:
-            logging.warn('Building staffline cropobjects from merged segments failed:'
-                         ' {0}'.format(e.message))
+            logging.warning('Building staffline cropobjects from merged segments failed:'
+                            ' {0}'.format(e))
             return
 
         try:
             if build_staffspaces:
-                staffspaces = muscima.stafflines.build_staffspace_cropobjects(new_cropobjects)
+                staffspaces = mung.stafflines.build_staffspace_cropobjects(new_cropobjects)
                 new_cropobjects = new_cropobjects + staffspaces
         except Exception as e:
-            logging.warn('Building staffspace cropobjects from stafflines failed:'
-                         ' {0}'.format(e.message))
+            logging.warning('Building staffspace cropobjects from stafflines failed:'
+                            ' {0}'.format(e))
             return
 
         try:
             if add_staff_relationships:
-                new_cropobjects = muscima.stafflines.add_staff_relationships(new_cropobjects)
+                new_cropobjects = mung.stafflines.add_staff_relationships(new_cropobjects)
         except Exception as e:
-            logging.warn('Adding staff relationships failed:'
-                         ' {0}'.format(e.message))
+            logging.warning('Adding staff relationships failed:'
+                            ' {0}'.format(e))
             return
 
         self.import_cropobjects(new_cropobjects)
@@ -1266,7 +1266,7 @@ class CropObjectAnnotatorModel(Widget):
             logging.warning('Exporting MIDI failed, nothing to play!')
 
     def clear_midi_information(self):
-        """Removes all the information from all CropObjects."""
+        """Removes all the information from all MungNodes."""
         for c in list(self.cropobjects.values()):
             if c.data is None:
                 continue

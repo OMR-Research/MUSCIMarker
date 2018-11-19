@@ -9,7 +9,7 @@ import pprint
 
 import math
 
-import muscima
+from mung.inference.constants import _CONST
 
 from kivy.adapters.dictadapter import DictAdapter
 from kivy.app import App
@@ -164,8 +164,8 @@ class EdgeView(SelectableView, ToggleButton):
 
         # Edges that lead from non-staff to staff objects
         # only point a bit to the right.
-        if cropobject_to.clsname in muscima.STAFF_CROPOBJECT_CLASSES:
-            if cropobject_from.clsname in muscima.STAFF_CROPOBJECT_CLASSES:
+        if cropobject_to.clsname in _CONST.STAFF_CROPOBJECT_CLSNAMES:
+            if cropobject_from.clsname in _CONST.STAFF_CROPOBJECT_CLSNAMES:
                 self.horz_end = cropobject_to.y + (old_div(cropobject_to.width, 2))
             else:
                 self.horz_end = cropobject_from.y + 20

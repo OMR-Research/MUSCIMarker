@@ -68,7 +68,7 @@ X and Y
 There are unfortunately three different interpretations of what X and Y
 means in the ecosystem of MUSCIMarker.
 
-* The CropObject XML schema defines X as the **horizontal** dimension
+* The MungNode XML schema defines X as the **horizontal** dimension
   from the **left** and Y as the **vertical** dimension from the **top**.
 * Numpy, and by extension OpenCV, defines X as the **vertical**  dimension
   from the **top** and Y as the **horizontal** dimension from the **left**.
@@ -77,11 +77,11 @@ means in the ecosystem of MUSCIMarker.
 
 This causes much wailing and gnashing of teeth.
 
-Upon loading the CropObjects from the XML, the parsing function
+Upon loading the MungNodes from the XML, the parsing function
 ``muscima_io.parse_cropobject_list()`` automatically swaps X and Y around
 from the XML schema world into the Numpy world. Upon export, the
-``CropObject.__str__()`` method again automatically swaps X and Y to export
-the CropObject back to the XML schema world.
+``MungNode.__str__()`` method again automatically swaps X and Y to export
+the MungNode back to the XML schema world.
 
 To get from the Numpy world to the Kivy world, two steps happen.
 First, the :class:`CropObjectRenderer` class swaps the numpy-world vertical
@@ -95,7 +95,7 @@ this at the lowest possible level: when passing the user action "up" to
 tool classes that handle processing, we convert everything
 to top/left/bottom/right (if dealing with bounding boxes).
 
-The CropObjects in the :class:`CropObjectAnnotatorModel` are always kept
+The MungNodes in the :class:`CropObjectAnnotatorModel` are always kept
 in the Numpy world. There may be image processing operations associated
 with the annotated objects model.
 
@@ -105,7 +105,7 @@ have X, Y, width and height; they have - being in essence
 ToggleButtons - `size` and `pos`, just like any other Kivy widget.)
 
 Note that while X and Y needs to be transposed in various ways during
-the journey of a CropObject from XML file to visualization and back,
+the journey of a MungNode from XML file to visualization and back,
 the interpretation of the ``width`` and ``height`` parameters
 *does not change*.
 
@@ -182,7 +182,7 @@ Each tracked event generates one JSON dictionary. All events have:
 The arguments with which the tracked function was called can also be
 captured. The tracker also allows for some simple transformations for
 the tracked arguments: for instance, cropobject creation tracking
-logs just the `objid` and `clsname` attributes instead of the entire CropObject.
+logs just the `objid` and `clsname` attributes instead of the entire MungNode.
 
 Tracking implementation
 -----------------------
@@ -221,8 +221,8 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
-from muscima.io import parse_cropobject_list, parse_cropobject_class_list
-from muscima.cropobject import CropObject
+from mung.io import parse_cropobject_list, parse_cropobject_class_list
+from mung.node import Node as MungNode
 from MUSCIMarker.image_processing import ImageProcessing
 from MUSCIMarker.help import Help
 from MUSCIMarker.objid_selection import ObjidSelectionDialog
@@ -233,7 +233,7 @@ from MUSCIMarker.rendering import CropObjectRenderer
 from MUSCIMarker.utils import FileNameLoader, ImageToModelScaler, ConfirmationDialog, keypress_to_dispatch_key, \
     MessageDialog, OnBindFileSaver, compute_connected_components, filename2docname
 from MUSCIMarker.annotator_model import CropObjectAnnotatorModel
-import MUSCIMarker.toolkit
+import MUSCIMarker.toolkit as toolkit
 import MUSCIMarker.tracker as tr
 
 import kivy
@@ -261,7 +261,7 @@ def cropobject_as_bbox_converter(row_index, rec):
 
 
 # class CropObjectView(RelativeLayout):
-#     """This widget is the visual representation of a CropObject."""
+#     """This widget is the visual representation of a MungNode."""
 #     # Add ButtonBehaivor, SelectableItemBehavior mixins?
 #     bottom = NumericProperty()
 #     left = NumericProperty()
@@ -315,7 +315,7 @@ class MUSCIMarkerApp(App):
 
     **Nice-to-have**
 
-    * CropObject splitting and merging. (DONE)
+    * MungNode splitting and merging. (DONE)
     * Be aware of MUSCIMA (Design decision: NO, so far)
     * Pre-annotation (classifier of bounding boxes)
 
@@ -357,7 +357,7 @@ class MUSCIMarkerApp(App):
         --> apply controller/model actions --> ...
 
     Note that some parts of the interface might be simplified by assuming
-    they always work the same way (such as exporting the current CropObjects,
+    they always work the same way (such as exporting the current MungNodes,
     or loading a MLClassList -- however, one has to be careful for all
     actions that are not read-only on the model, as it may require some
     stateful controller action such as mode transition. (If you change the
@@ -374,25 +374,25 @@ class MUSCIMarkerApp(App):
 
     The annotator model also has different states -- corresponding
     to its data (which image is being annotated, what MLClassList
-    is being used and the current CropObjects).
+    is being used and the current MungNodes).
 
 
-    Visualizing the CropObjects
+    Visualizing the MungNodes
     ----------------------------
 
     We want to see the annotated objects, each as a colored semi-transparent
     bounding box. The chain from an annotation object to the visual representation:
 
-    CropObject -(A)-> SelectableCropObject -(B)-> CropObjectView
+    MungNode -(A)-> SelectableCropObject -(B)-> CropObjectView
 
-    **B** The conversion from a selectable CropObject to the View (the visible
+    **B** The conversion from a selectable MungNode to the View (the visible
     rectangle) is done through a DictAdapter. The output widget is then "posted"
     upon a separate RelativeLayout that is overlaid over the edited image.
 
     We want the entire chain to be event-driven: listen to the model's
     ``cropobject_list``, maintain a dictionary of SelectableCropObjects
     (at this point, we need access to the editor widget's dimensions, because
-    the vertical (X) position of the CropObject is represented from top-left,
+    the vertical (X) position of the MungNode is represented from top-left,
     but Kivy needs it from bottom-left), then adapt the dictionary of these
     intermediate-stage SelectableCropObject data items into CropObjectView(s).
 
@@ -439,12 +439,12 @@ class MUSCIMarkerApp(App):
     image_height_ratio_in = NumericProperty()
     '''The ratio between the loaded image height and the original image size.
     Used on import/export of CropObjectList to interface between displayed
-    CropObject bounding boxes and the exports, which need to be aligned
+    MungNode bounding boxes and the exports, which need to be aligned
     to the image file.
 
     However, real-time recomputing is also wrong, because the coordinates
     do get recomputed inside the ScatterLayout in which the Image lives.
-    The coordinates of added CropObjects are therefore always kept in relation
+    The coordinates of added MungNodes are therefore always kept in relation
     to the size of the image when it is first displayed.
 
     This number specifically defines the scaling upon CropOpbject *import*.
@@ -476,11 +476,11 @@ class MUSCIMarkerApp(App):
     cropobject_list_saver = ObjectProperty(OnBindFileSaver(overwrite=True))
     cropobject_list_export_path = StringProperty()
 
-    cropobject_current_docname = StringProperty(CropObject.UID_DEFAULT_DOCUMENT_NAMESPACE)
-    cropobject_current_dataset_namespace = StringProperty(CropObject.UID_DEFAULT_DATASET_NAMESPACE)
+    cropobject_current_docname = StringProperty(MungNode.UID_DEFAULT_DOCUMENT_NAMESPACE)
+    cropobject_current_dataset_namespace = StringProperty(MungNode.UID_DEFAULT_DATASET_NAMESPACE)
 
     ##########################################################################
-    # View of the annotated CropObjects and relationships, and exposing
+    # View of the annotated MungNodes and relationships, and exposing
     # them to the rest of the app.
     cropobject_list_renderer = ObjectProperty()
     '''The renderer is responsible for showing the current state
@@ -488,13 +488,13 @@ class MUSCIMarkerApp(App):
     over the editor image.'''
 
     selected_cropobjects = ListProperty()
-    '''Bind fixed UI elements that need to know which CropObjects
+    '''Bind fixed UI elements that need to know which MungNodes
      are selected to this. It has to be actively updated by the Views.'''
 
     def _get_n_selected_cropobjects(self): return len(self.selected_cropobjects)
     n_selected_cropobjects = AliasProperty(_get_n_selected_cropobjects, None,
                                            bind=['selected_cropobjects'])
-    '''For counting how many CropObjects are selected.'''
+    '''For counting how many MungNodes are selected.'''
 
     graph_renderer = ObjectProperty()
     '''The edge renderer is responsible for showing the current state
@@ -507,7 +507,7 @@ class MUSCIMarkerApp(App):
     def _get_n_selected_relationships(self): return len(self.selected_relationships)
     n_selected_relationships = AliasProperty(_get_n_selected_relationships, None,
                                            bind=['selected_relationships'])
-    '''For counting how many CropObjects are selected.'''
+    '''For counting how many MungNodes are selected.'''
 
     #######################################
     # In-app messages (not working yet)
@@ -549,7 +549,7 @@ class MUSCIMarkerApp(App):
         logging.info('Build: Loaded image fname from config: {0}'
                      ''.format(self.image_loader.filename))
 
-        # Rendering CropObjects
+        # Rendering MungNodes
         self.cropobject_list_renderer = CropObjectRenderer(
             annot_model=self.annot_model,
             editor_widget=self._get_editor_widget())
@@ -813,7 +813,7 @@ class MUSCIMarkerApp(App):
             # again for internal consistency (it is used e.g. in suggesting
             # an export path).
             'cropobject_list_filename': self.cropobject_list_loader.filename,
-            # We'll use the model to get the list of current CropObjects.
+            # We'll use the model to get the list of current MungNodes.
             # The cropobjects member of annot_model is a kivy Property,
             # so it fails on pickle -- we must get the data itself
             # by different means.
@@ -894,9 +894,9 @@ class MUSCIMarkerApp(App):
 
         # Trigger CropObjectList loading (but this is irrelevant it's just
         # going through the motions to make sure that there is a consistent
-        # CropObjectList filename. After loading, we then replace the CropObjects
-        # replace it by the model's CropObjects instead - clear it and replace
-        # with saved CropObjects).
+        # CropObjectList filename. After loading, we then replace the MungNodes
+        # replace it by the model's MungNodes instead - clear it and replace
+        # with saved MungNodes).
         logging.info('App._build_from_app_state: Dummy-loading CropObjectList: {0}'
                      ''.format(cropobject_list_filename))
         _old_cropobject_list_filename = self.cropobject_list_loader.filename
@@ -917,10 +917,10 @@ class MUSCIMarkerApp(App):
 
         # If we get to this point, there should not be a problem.
 
-        # Building the CropObjects from the model:
-        logging.info('App._build_from_app_state: Replacing file-based CropObjects'
-                     ' with CropObjects loaded from the model in the app state.')
-        logging.info('App._build_from_app_state: no. of CropObjects: from file:'
+        # Building the MungNodes from the model:
+        logging.info('App._build_from_app_state: Replacing file-based MungNodes'
+                     ' with MungNodes loaded from the model in the app state.')
+        logging.info('App._build_from_app_state: no. of MungNodes: from file:'
                      ' {0}, from state: {1}'.format(len(self.annot_model.cropobjects),
                                                     len(cropobjects)))
         self.annot_model.clear_cropobjects()
@@ -1047,7 +1047,7 @@ class MUSCIMarkerApp(App):
             logging.info('Doing current MLClass selection dialog.')
             self.open_mlclass_selection_dialog()
         # This is a shortcut that can be used even if there
-        # are selected CropObjects that would respond to "c"
+        # are selected MungNodes that would respond to "c"
         elif dispatch_key == '99+alt': # alt+c
             logging.info('Doing current MLCLass selection dialog, forced')
             self.open_mlclass_selection_dialog()
@@ -1057,7 +1057,7 @@ class MUSCIMarkerApp(App):
             self.open_objid_selection_dialog()
 
         elif dispatch_key == '115+shift':  # "shift+s" -- select all of current clsname
-            logging.info('Selecting all CropObjects of the current clsname.')
+            logging.info('Selecting all MungNodes of the current clsname.')
             view = self.cropobject_list_renderer.view
             view.select_class(self.currently_selected_mlclass_name)
 
@@ -1179,7 +1179,7 @@ class MUSCIMarkerApp(App):
 
         ###############
         # docname behavior:
-        #  - If importing an existing CropObject list, take their docname.
+        #  - If importing an existing MungNode list, take their docname.
         #    Chances are, someone is editing a list after a pause, or QC is going
         #    on; in both of these cases, the document name should not change.
         #  - The only exception is when loading a file with the default docname.
@@ -1188,18 +1188,18 @@ class MUSCIMarkerApp(App):
         # Set docname for UIDs
         docnames = list(set([c.doc for c in cropobject_list]))
         if len(docnames) > 1:
-            raise ValueError('Mixing CropObjects from {0} different documents:'
+            raise ValueError('Mixing MungNodes from {0} different documents:'
                              ' {1}!'.format(len(docnames), '\n'.join(docnames)))
         if len(docnames) > 0:
-            if docnames[0] != CropObject.UID_DEFAULT_DOCUMENT_NAMESPACE:
+            if docnames[0] != MungNode.UID_DEFAULT_DOCUMENT_NAMESPACE:
                 self.cropobject_current_docname = docnames[0]
 
         datasets = list(set([c.dataset for c in cropobject_list]))
         if len(datasets) > 1:
-            raise ValueError('Mixing CropObjects from {0} different datasets:'
+            raise ValueError('Mixing MungNodes from {0} different datasets:'
                              ' {1}!'.format(len(datasets), '\n'.join(datasets)))
         if len(datasets) > 0:
-            if datasets[0] != CropObject.UID_DEFAULT_DATASET_NAMESPACE:
+            if datasets[0] != MungNode.UID_DEFAULT_DATASET_NAMESPACE:
                 self.cropobject_current_dataset_namespace = datasets[0]
 
 
@@ -1208,7 +1208,7 @@ class MUSCIMarkerApp(App):
         self.cropobject_list_renderer.view.unselect_all()
         self.annot_model.import_cropobjects(cropobject_list, clear=True)
 
-        logging.info('App: Importing CropObjects took {0:.3f} seconds.'.format(time.clock() - _start_time))
+        logging.info('App: Importing MungNodes took {0:.3f} seconds.'.format(time.clock() - _start_time))
 
     @tr.Tracker(track_names=['pos'],
                 transformations={'pos': [lambda x: ('image_file', x)]},
@@ -1299,7 +1299,7 @@ class MUSCIMarkerApp(App):
         # docname behavior:
         #  - If importing an image, the current annotation gets deleted.
         #    The assumption is that for a new image, you will either:
-        #     - (a) import an existing CropObject list, in which case its docname
+        #     - (a) import an existing MungNode list, in which case its docname
         #       will supersede whatever we set here in accordance with the policy
         #       of "getting back to work",
         #     - (b) this is the first time you are  annotating this image, and so
@@ -1658,7 +1658,7 @@ class MUSCIMarkerApp(App):
 
     def generate_cropobject_from_selection(self, selection, clsname=None, mask=None,
                                            integer_bounds=True):
-        """After a selection is made, create the new CropObject.
+        """After a selection is made, create the new MungNode.
         (To add it to the model, use add_cropobject_from_selection() instead.)
 
         Recomputes the X, Y and sizes back to the Numpy world & original image
@@ -1667,16 +1667,16 @@ class MUSCIMarkerApp(App):
         :param selection: A dict with the members `top`, `left`, `bottom` and `right`.
             These coordinates are assumed to be in the Kivy world.
 
-        :param mask: Model-world mask to apply to the CropObject.
+        :param mask: Model-world mask to apply to the MungNode.
 
-        :param integer_bounds: Whether the created CropObject should be scaled
+        :param integer_bounds: Whether the created MungNode should be scaled
             to integer bounds.
 
         """
         logging.info('App: Generating cropobject from selection {0}'.format(selection))
-        # The current CropObject definition is weird this way...
+        # The current MungNode definition is weird this way...
         # x, y is the top-left corner, X is horizontal, Y is vertical.
-        # Kivy counts position from bottom left, while CropObjects count them
+        # Kivy counts position from bottom left, while MungNodes count them
         # from top left. So we need to invert the Y dimension.
         # Plus, for Kivy, X is vertical and Y is horizontal.
         # (To add to the confusion, numpy indexes from top-left and uses X
@@ -1689,7 +1689,7 @@ class MUSCIMarkerApp(App):
 
         # (The scaling from model-world to editor should be refactored out:
         #  working on utils/ImageToModelScaler)
-        # Another problem: CropObjects that get recorded in the model should have
+        # Another problem: MungNodes that get recorded in the model should have
         # dimensions w.r.t. the image, not the editor. So, we need to resize them
         # first to the original ratios...
         x_unscaled = float(selection['top'])
@@ -1713,10 +1713,10 @@ class MUSCIMarkerApp(App):
         logging.info('App.scaler: Scaler would generate numpy-world'
                      ' x={0}, y={1}, h={2}, w={3}'.format(mT, mL, mH, mW))
 
-        uid = CropObject.build_uid(global_name=self.cropobject_current_dataset_namespace,
+        uid = MungNode.build_uid(global_name=self.cropobject_current_dataset_namespace,
                                    document_name=self.cropobject_current_docname,
                                    numid=new_cropobject_objid)
-        c = CropObject(objid=new_cropobject_objid,
+        c = MungNode(objid=new_cropobject_objid,
                        clsname=new_cropobject_clsname,
                        # Hah -- here, having the Image as the parent widget
                        # of the bbox selection tool is kind of useful...
@@ -1738,15 +1738,15 @@ class MUSCIMarkerApp(App):
 
     def generate_cropobject_from_model_selection(self, selection, clsname=None, mask=None,
                                                  integer_bounds=True):
-        """After a selection is made **in the model world**, create the new CropObject.
+        """After a selection is made **in the model world**, create the new MungNode.
         (To add it to the model, use add_cropobject_from_model_selection() instead.)
 
         :param selection: A dict with the members `top`, `left`, `bottom` and `right`.
             These coordinates are assumed to be in the model/numpy world.
 
-        :param mask: Model-world mask to apply to the CropObject.
+        :param mask: Model-world mask to apply to the MungNode.
 
-        :param integer_bounds: Whether the created CropObject should be scaled
+        :param integer_bounds: Whether the created MungNode should be scaled
             to integer bounds.
         """
         logging.info('App: Generating cropobject from model selection {0}'.format(selection))
@@ -1761,10 +1761,10 @@ class MUSCIMarkerApp(App):
         mH = mB - mT
         mW = mR - mL
 
-        uid = CropObject.build_uid(global_name=self.cropobject_current_dataset_namespace,
+        uid = MungNode.build_uid(global_name=self.cropobject_current_dataset_namespace,
                                    document_name=self.cropobject_current_docname,
                                    numid=new_cropobject_objid)
-        c = CropObject(objid=new_cropobject_objid,
+        c = MungNode(objid=new_cropobject_objid,
                        clsname=new_cropobject_clsname,
                        top=mT, left=mL, width=mW, height=mH,
                        mask=mask,
@@ -2166,7 +2166,7 @@ class MUSCIMarkerApp(App):
         for c in list(self.annot_model.cropobjects.values()):
             if (c.clsname in BARLINE_CLASSES) and (len(c.inlinks) == 0):
                 # Add a measure separator from this one:
-                #  - create the new CropObject
+                #  - create the new MungNode
                 #  - add the link from the measure_separator
                 # Basically, it's like passing shift+M on the barline
                 # with the measure_separator as current class.
@@ -2188,7 +2188,7 @@ class MUSCIMarkerApp(App):
         but the annotator did not mark the object accurately within the box.
 
         :param exclusive: If True, will only count pixels that are not a part
-            of any other CropObject against the threshold. (This will make
+            of any other MungNode against the threshold. (This will make
             the computation much slower.)
         """
         if threshold is None:
