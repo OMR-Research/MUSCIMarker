@@ -22,8 +22,7 @@ from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
 
-from muscima.cropobject import CropObject
-# import mhr.muscima as mm
+from mung.node import Node as MungNode
 
 from kivy.input.recorder import Recorder
 
