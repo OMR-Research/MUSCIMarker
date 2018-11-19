@@ -17,10 +17,11 @@ jobs:
       createCustomEnvironment: true
       environmentName: test-environment
       packageSpecs: 'python=3.6 numpy scipy matplotlib pytest h5py scikit-image pillow cython coverage'
-  - script: sudo add-apt-repository ppa:kivy-team/kivy -y
-  - script: sudo apt-get update -q || true
-  - script: sudo apt-get install libegl1-mesa-dev libgles2-mesa-dev -y
-  - script: sudo apt-get install python-kivy libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev -y
+  - script: |
+      sudo add-apt-repository ppa:kivy-team/kivy -y
+      sudo apt-get update -q || true
+      sudo apt-get install libegl1-mesa-dev libgles2-mesa-dev -y
+      sudo apt-get install python-kivy libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev -y
 
   - script: |
       pip install --user -r requirements.txt
@@ -53,12 +54,22 @@ jobs:
       packageSpecs: 'python=3.6 numpy scipy matplotlib pytest h5py scikit-image pillow cython coverage'
 
   - script: |
-      pip install --user -r requirements.txt
-      pip install --user -r requirements_windows.txt
+      pip install -r requirements.txt
+      pip install -r requirements_windows.txt
     displayName: 'Install dependencies'
 
-  - script: pip install --user kivy
+  - script: pip install kivy
     displayName: 'Install kivy'
+  
+  - script: |
+        conda info
+        python --version
+        pip --version
+        pip list
+    displayName: 'List installed packages'
+
+  - script: copy monkey_patch\config.py C:\Miniconda\envs\test-environment\lib\site-packages\kivy\config.py /Y
+    displayName: 'Monkey Patch Kivy'
 
   - script: pytest
     displayName: 'pytest'

@@ -421,7 +421,10 @@ class MUSCIMarkerApp(App):
 
     """
 
-    annot_model = CropObjectAnnotatorModel()
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+
+        self.annot_model = CropObjectAnnotatorModel()
 
     currently_selected_tool_name = StringProperty('_default')
     tool = ObjectProperty()

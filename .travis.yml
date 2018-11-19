@@ -7,9 +7,7 @@ python:
 
 install:
   # code below is taken from http://conda.pydata.org/docs/travis.html
-  # Alternatively, take Miniconda3-4.3.31-Linux-x86_64.sh directly for python 3.6
-  # - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
-  - wget https://repo.continuum.io/miniconda/Miniconda3-4.3.31-Linux-x86_64.sh -O miniconda.sh;
+  - wget https://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh;
   - bash miniconda.sh -b -p $HOME/miniconda
   - export PATH="$HOME/miniconda/bin:$PATH"
   - hash -r
@@ -24,23 +22,23 @@ install:
   # Display the Python version we are running now
   - python --version
 
-  # Install additional requirements (Keras and Tensorflow CPU-Version)
-  - pip install -r requirements.txt  
-  
-  # List installed packages for debuggin purposes
-  - pip list
-  
   # Install Kivy 1.10.1, see https://kivy.org/docs/installation/installation-linux.html#installation-in-a-virtual-environment
   - sudo add-apt-repository ppa:kivy-team/kivy -y
   # Ignore errors from the next command
   - sudo apt-get update -q || true
-
   - sudo apt-get install libegl1-mesa-dev libgles2-mesa-dev -y
   - sudo apt-get install python-kivy libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libsdl2-ttf-dev libportmidi-dev libswscale-dev libavformat-dev libavcodec-dev zlib1g-dev -y
-  - pip install kivy
+
+  # Install additional requirements (Keras and Tensorflow CPU-Version)
+  - pip install --user -r requirements.txt
+  
+  - pip install --user kivy
+
+  # List installed packages for debugging purposes
+  - pip list
 
 script:
-  - pytest --cov=./
+  - pytest
 
 after_success:
   - codecov

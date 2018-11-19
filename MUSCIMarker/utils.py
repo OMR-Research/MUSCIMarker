@@ -2,13 +2,12 @@
 from __future__ import print_function, unicode_literals
 from __future__ import division
 
-from builtins import str
-from past.utils import old_div
-from builtins import object
 import codecs
 import logging
-from math import floor, ceil
 import os
+from builtins import object
+from builtins import str
+from math import floor, ceil
 
 import numpy
 import skimage.measure
@@ -22,9 +21,9 @@ from kivy.uix.floatlayout import FloatLayout
 from kivy.uix.popup import Popup
 from kivy.uix.widget import Widget
 from kivy.uix.textinput import TextInput
-from kivy.uix.image import Image
 
-from mung.node import Node as MungNode # CropObject
+from muscima.cropobject import CropObject
+# import mhr.muscima as mm
 
 from kivy.input.recorder import Recorder
 
@@ -58,13 +57,15 @@ class KeypressBubblingStopperBehavior(object):
     ...     def on_key_up(self):
     ...         pass
     ...
-    >>> w = MyWidgetWithStopper()
-    >>> Window.bind(on_key_down=w.on_key_down)
-    >>> Window.bind(on_key_up=w.on_key_up)
-    >>> # Do something...
-    >>> # Before destroying the widget:
-    >>> Window.unbind(on_key_down=w.on_key_down)
-    >>> Window.unbind(on_key_up=w.on_key_up)
+    >>> def example():
+    ...     w = MyWidgetWithStopper()
+    ...     Window.bind(on_key_down=w.on_key_down)
+    ...     Window.bind(on_key_up=w.on_key_up)
+    ...     # Do something...
+    ...     # Before destroying the widget:
+    ...     Window.unbind(on_key_down=w.on_key_down)
+    ...     Window.unbind(on_key_up=w.on_key_up)
+    ...
 
     The purpose of this mixin is basically to prevent copying these
     two methods over and over.
@@ -320,19 +321,7 @@ class InspectionPopup(Popup):
         super(InspectionPopup, self).__init__(*args, **kwargs)
 
         self.data_text = data_text
-        print('---- self.image: {}'.format(self.image))
-        print('---- self.image.source: {}'.format(self.image.source))
-        # self.image.nocache = True
-        print('Reloading image with source {}...'.format(self.image.source))
-        self.image.reload()
-
-        print('Forcing texture update with source {}...'.format(self.image.source))
-        self.image.texture_update()
-
-        print(' ---- self.image.texture: {}'.format(self.image.texture))
-
-        # # print('self.image.texture.mag_filter: {}'.format(self.image.texture))
-        # self.image.texture.mag_filter = 'nearest'
+        self.image.texture.mag_filter = 'nearest'
 
     @property
     def image(self):
