@@ -98,3 +98,4 @@ MUSCIMarker/test-data/test_output_list.xml
 
 **/junit/
 /.pytest_cache/
+**/tmp/
