@@ -68,7 +68,7 @@ jobs:
         pip list
     displayName: 'List installed packages'
 
-  - script: copy monkey_patch\config.py C:\Miniconda\envs\test-environment\lib\site-packages\kivy\config.py /Y
+  - script: copy monkey_patch\config.py C:\Users\VssAdministrator\.conda\envs\test-environment\lib\site-packages\kivy\config.py /Y
     displayName: 'Monkey Patch Kivy'
 
   - script: pytest
