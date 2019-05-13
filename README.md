@@ -35,7 +35,7 @@ Documentation: http://muscimarker.readthedocs.io/en/latest/
 
 Basically follow the tutorial from the [Kivy website](https://kivy.org/docs/guide/packaging-windows.html):
 
-- Make sure you have all dependencies installed
+- Make sure you have all dependencies ([general](requirements.txt), [windows-specific](requirements_windows.txt)) installed, including Kivy, which is not listed directly. Check out [Travis build environment](.travis.yml) for Linux and [Azure Pipeline environment](azure-pipelines.yml) for Windows.
 - From within `[GIT_ROOT]/MUSCIMarker/MUSCIMarker` run `python -m PyInstaller --name MUSCIMarker main.py`
 - Navigate to the `MUSCIMarker.spec` file and add `from kivy.deps import sdl2, glew` to the top and the following two statements to the COLLECT or EXE script:
     - `Tree('[GIT_ROOT]/MUSCIMarker/MUSCIMarker')`
