@@ -221,8 +221,8 @@ from kivy.core.window import Window
 from kivy.clock import Clock
 from kivy.uix.gridlayout import GridLayout
 from kivy.uix.togglebutton import ToggleButton
-from mung.io import parse_cropobject_list, parse_cropobject_class_list
-from mung.node import Node as MungNode
+from muscima.io import parse_cropobject_list, parse_cropobject_class_list
+from muscima.cropobject import CropObject as MungNode
 from MUSCIMarker.image_processing import ImageProcessing
 from MUSCIMarker.help import Help
 from MUSCIMarker.objid_selection import ObjidSelectionDialog

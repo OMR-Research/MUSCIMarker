@@ -16,7 +16,7 @@ from kivy.uix.label import Label
 from kivy.uix.listview import SelectableView, CompositeListItem
 from kivy.uix.spinner import Spinner
 from kivy.uix.togglebutton import ToggleButton
-from mung.node import split_cropobject_on_connected_components
+from muscima.cropobject import split_cropobject_on_connected_components
 from past.utils import old_div
 
 import MUSCIMarker.tracker as tr
@@ -789,11 +789,6 @@ class CropObjectView(SelectableView, ToggleButton):
 
     ##########################################################################
     # Copied over from ListItemButton
-    @tr.Tracker(track_names=['self'],
-                transformations={'self': [lambda s: ('objid', s._model_counterpart.objid),
-                                          lambda s: ('clsname', s._model_counterpart.clsname)]},
-                fn_name='CropObjectView.select',
-                tracker_name='editing')
     def select(self, *args):
         # logging.debug('CropObjectView\t{0}: called selection'
         #               ''.format(self.cropobject.objid))

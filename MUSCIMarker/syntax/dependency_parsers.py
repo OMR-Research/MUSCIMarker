@@ -6,9 +6,9 @@ import collections
 import logging
 
 import numpy
-from mung.node import cropobject_distance
-from mung.graph import find_beams_incoherent_with_stems
-from mung.inference.constants import _CONST
+from muscima.cropobject import cropobject_distance
+from muscima.graph import find_beams_incoherent_with_stems
+from muscima.inference import _CONST
 from sklearn.feature_extraction import DictVectorizer
 
 __version__ = "0.0.1"

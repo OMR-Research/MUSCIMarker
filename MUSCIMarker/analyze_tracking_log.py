@@ -38,7 +38,7 @@ import time
 import matplotlib.pyplot as plt
 import operator
 
-from mung.io import parse_cropobject_list
+from muscima.io import parse_cropobject_list
 
 __version__ = "0.0.1"
 __author__ = "Jan Hajic jr."

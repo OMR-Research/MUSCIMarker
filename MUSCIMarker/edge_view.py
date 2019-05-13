@@ -9,7 +9,7 @@ import pprint
 
 import math
 
-from mung.inference.constants import _CONST
+from muscima.inference import _CONST
 
 from kivy.adapters.dictadapter import DictAdapter
 from kivy.app import App

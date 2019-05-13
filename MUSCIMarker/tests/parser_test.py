@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from mung.io import parse_cropobject_class_list
+from muscima.io import parse_cropobject_class_list
 from MUSCIMarker.syntax.dependency_grammar import DependencyGrammar
 
 class DependencyGrammarTest(unittest.TestCase):

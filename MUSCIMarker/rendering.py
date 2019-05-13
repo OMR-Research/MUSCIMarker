@@ -28,8 +28,8 @@ from kivy.uix.togglebutton import ToggleButton
 from kivy.uix.widget import Widget
 
 from MUSCIMarker.cropobject_view import CropObjectView
-from mung.inference.constants import InferenceEngineConstants as _CONST
-from mung.node import cropobjects_merge_bbox, cropobjects_merge_mask, cropobjects_merge_links
+from muscima.inference import InferenceEngineConstants as _CONST
+from muscima.cropobject import cropobjects_merge_bbox, cropobjects_merge_mask, cropobjects_merge_links
 import MUSCIMarker.tracker as tr
 from MUSCIMarker.utils import keypress_to_dispatch_key
 

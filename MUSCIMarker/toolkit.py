@@ -16,8 +16,8 @@ from kivy.core.window import Window
 from kivy.properties import ObjectProperty, BooleanProperty, ListProperty, NumericProperty
 from kivy.uix.button import Button
 from kivy.uix.widget import Widget
-from mung.node import split_cropobject_on_connected_components
-from mung.inference.constants import InferenceEngineConstants as _CONST
+from muscima.cropobject import split_cropobject_on_connected_components
+from muscima.inference import InferenceEngineConstants as _CONST
 from past.utils import old_div
 from skimage.draw import polygon, line
 from skimage.filters import threshold_otsu

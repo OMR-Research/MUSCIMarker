@@ -19,11 +19,10 @@ from kivy.app import App
 from kivy.properties import ObjectProperty, DictProperty, NumericProperty, ListProperty, StringProperty
 from kivy.uix.widget import Widget
 
-from mung.io import export_cropobject_list
-import mung.stafflines
-from mung.inference.inference import PitchInferenceEngine, OnsetsInferenceEngine, MIDIBuilder, play_midi
-from mung.inference.constants import InferenceEngineConstants as _CONST
-from mung.graph import \
+from muscima.io import export_cropobject_list
+from muscima.inference import PitchInferenceEngine, OnsetsInferenceEngine, MIDIBuilder, play_midi
+from muscima.inference import InferenceEngineConstants as _CONST
+from muscima.graph import \
     find_beams_incoherent_with_stems, \
     find_misdirected_ledger_line_edges, \
     find_related_staffs
@@ -1135,7 +1134,7 @@ class CropObjectAnnotatorModel(Widget):
             # return
 
         try:
-            new_cropobjects = mung.stafflines.merge_staffline_segments(list(self.cropobjects.values()))
+            new_cropobjects = muscima.stafflines.merge_staffline_segments(list(self.cropobjects.values()))
         except ValueError as e:
             logging.warning('Model: Staffline merge failed:\n\t\t'
                             '{0}'.format(e))
@@ -1143,7 +1142,7 @@ class CropObjectAnnotatorModel(Widget):
 
         try:
             if build_staffs:
-                staffs = mung.stafflines.build_staff_cropobjects(new_cropobjects)
+                staffs = muscima.stafflines.build_staff_cropobjects(new_cropobjects)
                 new_cropobjects = new_cropobjects + staffs
         except Exception as e:
             logging.warning('Building staffline cropobjects from merged segments failed:'
@@ -1152,7 +1151,7 @@ class CropObjectAnnotatorModel(Widget):
 
         try:
             if build_staffspaces:
-                staffspaces = mung.stafflines.build_staffspace_cropobjects(new_cropobjects)
+                staffspaces = muscima.stafflines.build_staffspace_cropobjects(new_cropobjects)
                 new_cropobjects = new_cropobjects + staffspaces
         except Exception as e:
             logging.warning('Building staffspace cropobjects from stafflines failed:'
@@ -1161,7 +1160,7 @@ class CropObjectAnnotatorModel(Widget):
 
         try:
             if add_staff_relationships:
-                new_cropobjects = mung.stafflines.add_staff_relationships(new_cropobjects)
+                new_cropobjects = muscima.stafflines.add_staff_relationships(new_cropobjects)
         except Exception as e:
             logging.warning('Adding staff relationships failed:'
                             ' {0}'.format(e))

@@ -29,8 +29,8 @@ import time
 
 import operator
 
-from mung.io import parse_cropobject_list, export_cropobject_graph
-from mung.node import merge_cropobject_lists
+from muscima.io import parse_cropobject_list, export_cropobject_graph
+from muscima.cropobject import merge_cropobject_lists
 
 __version__ = "0.0.1"
 __author__ = "Jan Hajic jr."
