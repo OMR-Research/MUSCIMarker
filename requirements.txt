@@ -8,6 +8,7 @@ lxml
 opencv-python
 future
 cython
+midiutil
 
 # Python requirements for Windows and Linux
 docutils
