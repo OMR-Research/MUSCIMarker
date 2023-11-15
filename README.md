@@ -2,13 +2,7 @@
 
 Tool for annotating objects in musical scores.
 
-**MOVED TO:** https://github.com/OMR-Research/MUSCIMarker
-
-All new development takes place there. Please point your remotes to the new repo.
-
-
 [![Documentation Status](https://readthedocs.org/projects/muscimarker/badge/?version=latest)](https://muscimarker.readthedocs.io/en/latest/index.html)
-[![Build Status](https://travis-ci.org/OMR-Research/MUSCIMarker.svg?branch=develop)](https://travis-ci.org/OMR-Research/MUSCIMarker)
 [![Build Status](https://dev.azure.com/OMR-Research/MUSCIMarker/_apis/build/status/OMR-Research.MUSCIMarker)](https://dev.azure.com/OMR-Research/MUSCIMarker/_build/latest?definitionId=1)
 [![Coverage Status](https://coveralls.io/repos/github/OMR-Research/MUSCIMarker/badge.svg?branch=develop)](https://coveralls.io/github/OMR-Research/MUSCIMarker?branch=develop)
 [![codecov](https://codecov.io/gh/OMR-Research/MUSCIMarker/branch/develop/graph/badge.svg)](https://codecov.io/gh/OMR-Research/MUSCIMarker)
